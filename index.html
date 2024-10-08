@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Account Balance</title>
+
+    <!-- Tailwind CSS with dark mode support -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Vue.js CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <style>
+      /* Enable dark mode */
+      @media (prefers-color-scheme: dark) {
+        :root {
+          color-scheme: dark;
+        }
+      }
+      /* Center form on the page */
+      .centered-form {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(31, 41, 55, 0.9); /* Dark background */
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+  </head>
+  <body class="dark:bg-gray-900 dark:text-white">
+
+    <!-- Vue.js app root -->
+    <div id="app">
+      <!-- Display balance at top right -->
+      <div class="balance-section py-4 px-4" v-if="balance">
+        <p>Balance: <strong>{{ balance }}</strong> {{ currency }}</p>
+        <p>Account: <strong>{{ loginid }}</strong></p>
+      </div>
+
+      <!-- Form in the center -->
+      <div class="centered-form">
+        <form @submit.prevent="executeTrade">
+          <div class="mb-4">
+            <label for="ticks" class="block text-white">Ticks</label>
+            <input
+              type="number"
+              id="ticks"
+              v-model="ticks"
+              class="w-full p-2 rounded bg-white text-gray-900 font-semibold"
+              required
+            />
+          </div>
+
+          <div class="mb-4">
+            <label for="amount-even" class="block text-white">Amount Even</label>
+            <input
+              type="number"
+              id="amount-even"
+              v-model="amountEven"
+              class="w-full p-2 rounded bg-white text-gray-900 font-semibold"
+              required
+            />
+          </div>
+
+          <div class="mb-4">
+            <label for="amount-odd" class="block text-white">Amount Odd</label>
+            <input
+              type="number"
+              id="amount-odd"
+              v-model="amountOdd"
+              class="w-full p-2 rounded bg-white text-gray-900 font-semibold"
+              required
+            />
+          </div>
+
+          <button type="submit" class="w-full bg-red-600 text-white py-2 rounded">
+            Execute Trade
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <script type="module">
+      // Import Deriv API
+      import DerivAPIBasic from 'https://cdn.skypack.dev/@deriv/deriv-api/dist/DerivAPIBasic';
+
+      // Vue.js Application
+      const { createApp } = Vue;
+
+      createApp({
+        data() {
+          return {
+            app_id: 64539,
+            api_token: 'KhcFUhkGV46TPog', // Your API token
+            connection: null,
+            api: null,
+            balance: null,
+            currency: null,
+            loginid: null,
+            ticks: null,
+            amountEven: null,
+            amountOdd: null,
+          };
+        },
+        methods: {
+          async getAccountBalance() {
+            try {
+              // Authorize using API token
+              const authorizeResponse = await this.api.authorize(this.api_token);
+
+              // Fetch the account balance
+              const balanceResponse = await this.api.balance();
+
+              // Set balance data
+              if (!balanceResponse.error) {
+                this.balance = balanceResponse.balance.balance;
+                this.currency = balanceResponse.balance.currency;
+                this.loginid = balanceResponse.balance.loginid;
+              }
+            } catch (err) {
+              console.error('Failed to fetch balance:', err);
+            }
+          },
+          startFetchingBalance() {
+            // Fetch balance every 10 seconds
+            this.getAccountBalance(); // Initial fetch
+            setInterval(this.getAccountBalance, 10000); // Refresh every 10 seconds
+          },
+          executeTrade() {
+            // Log form data when trade is executed
+            console.log("Ticks:", this.ticks);
+            console.log("Amount Even:", this.amountEven);
+            console.log("Amount Odd:", this.amountOdd);
+          }
+        },
+        mounted() {
+          // Set up WebSocket connection and API
+          this.connection = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${this.app_id}`);
+          this.api = new DerivAPIBasic({ connection: this.connection });
+
+          // Start fetching the balance once the component is mounted
+          this.startFetchingBalance();
+        }
+      }).mount('#app');
+    </script>
+  </body>
+</html>
