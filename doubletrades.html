@@ -41,8 +41,48 @@
       <p>Account: <strong>{{ loginid }}</strong></p>
     </div>
 
+    <!-- Notification alert -->
+    
+
     <!-- Form in the center -->
     <div class="centered-form">
+
+      <!-- Success Alert -->
+      <div class="py-4" v-if="showSuccessAlert">
+        <div id="alert" class="flex items-center justify-between bg-green-500 text-white text-sm font-bold px-4 py-3 rounded" role="alert">
+          <div>
+            <svg class="w-6 h-6 inline-block mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span>Success! Your trade has been executed.</span>
+          </div>
+          <button class="text-white" @click="closeSuccessAlert">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" d="M6 4a1 1 0 011.414 0L10 6.586 12.586 4A1 1 0 1114 5.414L11.414 8 14 10.586a1 1 0 01-1.414 1.414L10 9.414 7.414 12A1 1 0 016 10.586L8.586 8 6 5.414A1 1 0 016 4z" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <!-- Success Alert -->
+
+      <!-- Failure Alert -->
+      <div class="py-4" v-if="showFailureAlert">
+        <div id="alert" class="flex items-center justify-between bg-red-600 text-white text-sm font-bold px-4 py-3 rounded" role="alert">
+          <div>
+            <svg class="w-6 h-6 inline-block mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span>Failure! Trade execution did not go through.</span>
+          </div>
+          <button class="text-white" @click="closeFailureAlert">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" d="M6 4a1 1 0 011.414 0L10 6.586 12.586 4A1 1 0 1114 5.414L11.414 8 14 10.586a1 1 0 01-1.414 1.414L10 9.414 7.414 12A1 1 0 016 10.586L8.586 8 6 5.414A1 1 0 016 4z" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <!-- Failure Alert -->
+
       <form @submit.prevent="executeTrade">
         <div class="mb-4">
           <label for="ticks" class="block text-white">Ticks</label>
@@ -77,7 +117,7 @@
           />
         </div>
 
-        <button type="submit" class="w-full bg-red-600 text-white py-2 rounded">
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded">
           Execute Trade
         </button>
       </form>
@@ -104,6 +144,9 @@
           ticks: null,
           amountEven: null,
           amountOdd: null,
+          showNotification: false,
+          showSuccessAlert: false, // Success alert visibility
+          showFailureAlert: false, // Failure alert visibility
         };
       },
       methods: {
@@ -128,7 +171,7 @@
         startFetchingBalance() {
           // Fetch balance every 10 seconds
           this.getAccountBalance(); // Initial fetch
-          setInterval(this.getAccountBalance, 10000); // Refresh every 10 seconds
+          setInterval(this.getAccountBalance, 1000); // Refresh every 10 seconds
         },
         async executeTrade() {
           // Validate ticks value
@@ -190,8 +233,23 @@
             const buyResponses = await Promise.all(buyRequests);
             console.log("Buy Responses:", buyResponses);
 
+            // Show success notification
+            this.showSuccessAlert = true;
+
+            // Auto-hide the success alert after 4 seconds
+            setTimeout(() => {
+              this.showSuccessAlert = false;
+            }, 10000);
+
           } catch (error) {
             console.error('Trade execution error:', error);
+
+            this.showFailureAlert = true;
+
+            // Auto-hide the failure alert after 10 seconds
+            setTimeout(() => {
+              this.showFailureAlert = false;
+            }, 15000);
           }
         }
       },

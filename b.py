@@ -18,7 +18,7 @@ async def main():
     proposal_request = {
         "proposal":1,
         "subscribe":1,
-        "amount":"13.96",
+        "amount":"35",
         "basis":"stake",
         "contract_type":"DIGITODD",
         "currency":"USD",
